@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi CRM</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f3;
+      --surface: #ffffff;
+      --surface2: #f0efeb;
+      --border: rgba(0,0,0,0.1);
+      --border2: rgba(0,0,0,0.2);
+      --text: #1a1a18;
+      --text2: #6b6b68;
+      --blue: #185FA5;
+      --blue-bg: #E6F1FB;
+      --blue-dark: #0C447C;
+      --green: #3B6D11;
+      --green-bg: #EAF3DE;
+      --amber: #854F0B;
+      --amber-bg: #FAEEDA;
+      --gray: #5F5E5A;
+      --gray-bg: #F1EFE8;
+      --red: #A32D2D;
+      --red-bg: #FCEBEB;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { background: var(--surface); border-right: 0.5px solid var(--border); padding: 1.5rem 0; display: flex; flex-direction: column; }
+    .logo { padding: 0 1.25rem 1.5rem; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--border); margin-bottom: 1rem; }
+    .logo-icon { width: 34px; height: 34px; background: var(--blue); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
+    .logo-text { font-size: 16px; font-weight: 600; color: var(--text); }
+    .logo-sub { font-size: 11px; color: var(--text2); }
+    .nav-section { padding: 0 0.75rem; margin-bottom: 0.5rem; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 0.5rem; margin-bottom: 4px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius); cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--blue-bg); color: var(--blue); }
+    .nav-item i { font-size: 17px; }
+    .sidebar-footer { margin-top: auto; padding: 1rem 1.25rem 0; border-top: 0.5px solid var(--border); }
+    .user-chip { display: flex; align-items: center; gap: 10px; }
+    .user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-bg); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+    .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .user-email { font-size: 11px; color: var(--text2); }
+
+    /* Main */
+    .main { padding: 2rem; overflow-y: auto; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+    .page-title { font-size: 22px; font-weight: 600; color: var(--text); }
+    .page-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .stat-label i { font-size: 14px; }
+    .stat-value { font-size: 28px; font-weight: 600; }
+
+    /* Form */
+    .add-form { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; }
+    .form-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+    .form-icon { width: 30px; height: 30px; background: var(--blue-bg); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: var(--blue); font-size: 16px; }
+    .form-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 160px; gap: 10px; margin-bottom: 12px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+    input[type=text], input[type=tel], input[type=email], select {
+      width: 100%; height: 36px; padding: 0 10px;
+      border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: var(--surface); color: var(--text); font-size: 13px;
+      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(24,95,165,0.1); }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border2); background: none; color: var(--text); transition: background 0.15s; }
+    .btn:hover { background: var(--surface2); }
+    .btn-blue { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btn-blue:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+
+    /* Toolbar */
+    .toolbar { display: flex; gap: 10px; margin-bottom: 1rem; }
+    .search-wrap { position: relative; flex: 1; }
+    .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text2); font-size: 16px; pointer-events: none; }
+    .search-wrap input { padding-left: 34px; }
+    .count-badge { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 36px; border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 13px; color: var(--text2); background: var(--surface); white-space: nowrap; }
+
+    /* Table */
+    .table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    col.c-name { width: 22%; } col.c-phone { width: 17%; } col.c-email { width: 24%; } col.c-status { width: 14%; } col.c-date { width: 14%; } col.c-actions { width: 9%; }
+    thead { background: var(--surface2); }
+    th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 0.5px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+    th:hover { color: var(--text); }
+    th i { font-size: 13px; vertical-align: -1px; margin-left: 3px; }
+    td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafaf8; }
+    .name-cell { display: flex; align-items: center; gap: 9px; }
+    .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 99px; }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .badge.activo { background: var(--green-bg); color: var(--green); }
+    .badge.prospecto { background: var(--blue-bg); color: var(--blue); }
+    .badge.inactivo { background: var(--gray-bg); color: var(--gray); }
+    .badge.perdido { background: var(--red-bg); color: var(--red); }
+    .actions-cell { display: flex; gap: 5px; }
+    .btn-icon { width: 28px; height: 28px; border: 0.5px solid var(--border); border-radius: var(--radius); background: none; cursor: pointer; color: var(--text2); display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background 0.15s; }
+    .btn-icon:hover { background: var(--surface2); color: var(--text); }
+    .btn-icon.danger:hover { background: var(--red-bg); color: var(--red); border-color: #F09595; }
+    .empty-state { text-align: center; padding: 3rem; color: var(--text2); }
+    .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; opacity: 0.35; }
+
+    /* Modal */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; width: 460px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-field { margin-bottom: 12px; }
+    .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 28px; right: 28px; background: #1a1a18; color: #fff; border-radius: var(--radius); padding: 11px 18px; font-size: 13px; font-weight: 500; display: none; align-items: center; gap: 8px; z-index: 999; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
+    .toast.show { display: flex; }
+    .toast.success i { color: #97C459; }
+    .toast.error i { color: #F09595; }
+
+    /* Highlight row */
+    @keyframes rowflash { 0%,100%{background:transparent} 40%{background:var(--blue-bg)} }
+    .highlight { animation: rowflash 0.7s ease; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 2rem; color: var(--text2); }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-users"></i></div>
+      <div>
+        <div class="logo-text">Mi CRM</div>
+        <div class="logo-sub">Gestión de clientes</div>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <button class="nav-item active"><i class="ti ti-users"></i> Clientes</button>
+      <button class="nav-item" onclick="showToast('Próximamente','info')"><i class="ti ti-chart-bar"></i> Reportes</button>
+      <button class="nav-item" onclick="showToast('Próximamente','info')"><i class="ti ti-calendar"></i> Seguimientos</button>
+    </div>
+    <div class="nav-section" style="margin-top:0.5rem">
+      <div class="nav-label">Exportar</div>
+      <button class="nav-item" onclick="exportCSV()"><i class="ti ti-file-spreadsheet"></i> Exportar CSV</button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-av">U</div>
+        <div>
+          <div class="user-name">Usuario</div>
+          <div class="user-email">Mi CRM local</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Clientes</div>
+        <div class="page-sub" id="page-sub">Cargando…</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label" style="color:var(--blue)"><i class="ti ti-users"></i> Total</div>
+        <div class="stat-value" style="color:var(--blue)" id="st-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:var(--green)"><i class="ti ti-circle-check"></i> Activos</div>
+        <div class="stat-value" style="color:var(--green)" id="st-activo">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:var(--amber)"><i class="ti ti-eye"></i> Prospectos</div>
+        <div class="stat-value" style="color:var(--amber)" id="st-prospecto">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="color:var(--red)"><i class="ti ti-moon"></i> Inactivos</div>
+        <div class="stat-value" style="color:var(--red)" id="st-inactivo">—</div>
+      </div>
+    </div>
+
+    <!-- Add form -->
+    <div class="add-form">
+      <div class="form-header">
+        <div class="form-icon"><i class="ti ti-user-plus"></i></div>
+        <span class="form-title">Agregar nuevo cliente</span>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Nombre completo</label><input type="text" id="f-nombre" placeholder="Ej. María García"></div>
+        <div class="field"><label>Teléfono</label><input type="tel" id="f-telefono" placeholder="Ej. +52 55 1234 5678"></div>
+        <div class="field"><label>Correo electrónico</label><input type="email" id="f-correo" placeholder="maria@empresa.com"></div>
+        <div class="field"><label>Estado</label>
+          <select id="f-estado">
+            <option value="prospecto">Prospecto</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="perdido">Perdido</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="clearForm()"><i class="ti ti-eraser"></i> Limpiar</button>
+        <button class="btn btn-blue" onclick="addClient()"><i class="ti ti-plus"></i> Agregar cliente</button>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="search" placeholder="Buscar por nombre, teléfono o correo…" oninput="render()">
+      </div>
+      <select id="filter" onchange="render()" style="width:180px">
+        <option value="">Todos los estados</option>
+        <option value="activo">Activo</option>
+        <option value="prospecto">Prospecto</option>
+        <option value="inactivo">Inactivo</option>
+        <option value="perdido">Perdido</option>
+      </select>
+      <div class="count-badge"><i class="ti ti-list"></i> <span id="count-label">0 clientes</span></div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <colgroup><col class="c-name"><col class="c-phone"><col class="c-email"><col class="c-status"><col class="c-date"><col class="c-actions"></colgroup>
+        <thead>
+          <tr>
+            <th onclick="sort('nombre')">Nombre <i class="ti ti-selector" id="sort-nombre"></i></th>
+            <th onclick="sort('telefono')">Teléfono <i class="ti ti-selector" id="sort-telefono"></i></th>
+            <th onclick="sort('correo')">Correo <i class="ti ti-selector" id="sort-correo"></i></th>
+            <th onclick="sort('estado')">Estado <i class="ti ti-selector" id="sort-estado"></i></th>
+            <th onclick="sort('creado_en')">Fecha <i class="ti ti-selector" id="sort-creado_en"></i></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"><tr><td colspan="6"><div class="loading"><i class="ti ti-loader-2"></i> Cargando clientes…</div></td></tr></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-bg" id="edit-modal" onclick="closeBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Editar cliente</span>
+      <button class="btn-icon" onclick="closeEdit()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-field"><label>Nombre completo</label><input type="text" id="e-nombre"></div>
+    <div class="modal-field"><label>Teléfono</label><input type="tel" id="e-telefono"></div>
+    <div class="modal-field"><label>Correo electrónico</label><input type="email" id="e-correo"></div>
+    <div class="modal-field"><label>Estado</label>
+      <select id="e-estado">
+        <option value="prospecto">Prospecto</option>
+        <option value="activo">Activo</option>
+        <option value="inactivo">Inactivo</option>
+        <option value="perdido">Perdido</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeEdit()">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEdit()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
+
+<script>
+  const AC=[{bg:'#E6F1FB',c:'#185FA5'},{bg:'#EAF3DE',c:'#3B6D11'},{bg:'#FAEEDA',c:'#854F0B'},{bg:'#EEEDFE',c:'#534AB7'},{bg:'#FBEAF0',c:'#993556'},{bg:'#E1F5EE',c:'#0F6E56'}];
+  let clients=[], editId=null, sortKey='id', sortAsc=false, toastTimer=null;
+
+  function av(name){let h=0;for(let c of name)h=(h*31+c.charCodeAt(0))&0xffff;return AC[h%AC.length];}
+  function initials(n){return n.trim().split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();}
+  function fmtDate(d){if(!d)return'—';return d.slice(0,10);}
+
+  function showToast(msg,type='success'){
+    clearTimeout(toastTimer);
+    const t=document.getElementById('toast');
+    const icon=t.querySelector('i');
+    document.getElementById('toast-msg').textContent=msg;
+    icon.className=type==='success'?'ti ti-check':type==='error'?'ti ti-x':'ti ti-info-circle';
+    t.className='toast show '+(type||'success');
+    toastTimer=setTimeout(()=>t.className='toast',2800);
+  }
+
+  async function loadClients(){
+    const res=await fetch('/api/clientes');
+    clients=await res.json();
+    render();
+  }
+
+  function sort(k){
+    if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=true;}
+    ['nombre','telefono','correo','estado','creado_en'].forEach(x=>{
+      const el=document.getElementById('sort-'+x);
+      if(el)el.className='ti '+(x===k?(sortAsc?'ti-chevron-up':'ti-chevron-down'):'ti-selector');
+    });
+    render();
+  }
+
+  function filtered(){
+    const q=document.getElementById('search').value.toLowerCase();
+    const f=document.getElementById('filter').value;
+    return clients.filter(c=>{
+      const m=!q||c.nombre.toLowerCase().includes(q)||c.telefono.includes(q)||c.correo.toLowerCase().includes(q);
+      return m&&(!f||c.estado===f);
+    }).sort((a,b)=>{
+      if(!sortKey)return 0;
+      const va=String(a[sortKey]||''), vb=String(b[sortKey]||'');
+      return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+    });
+  }
+
+  function updateStats(){
+    document.getElementById('st-total').textContent=clients.length;
+    document.getElementById('st-activo').textContent=clients.filter(c=>c.estado==='activo').length;
+    document.getElementById('st-prospecto').textContent=clients.filter(c=>c.estado==='prospecto').length;
+    document.getElementById('st-inactivo').textContent=clients.filter(c=>c.estado==='inactivo'||c.estado==='perdido').length;
+    document.getElementById('page-sub').textContent=clients.length+' clientes registrados';
+  }
+
+  function render(){
+    updateStats();
+    const rows=filtered();
+    document.getElementById('count-label').textContent=rows.length+' cliente'+(rows.length!==1?'s':'');
+    const tbody=document.getElementById('tbody');
+    if(!rows.length){
+      tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><i class="ti ti-users-group"></i>Sin resultados</div></td></tr>`;
+      return;
+    }
+    const labels={activo:'Activo',prospecto:'Prospecto',inactivo:'Inactivo',perdido:'Perdido'};
+    tbody.innerHTML=rows.map(c=>{
+      const a=av(c.nombre);
+      return `<tr id="row-${c.id}">
+        <td><div class="name-cell"><span class="avatar" style="background:${a.bg};color:${a.c}">${initials(c.nombre)}</span>${c.nombre}</div></td>
+        <td>${c.telefono}</td>
+        <td title="${c.correo}">${c.correo}</td>
+        <td><span class="badge ${c.estado}"><span class="badge-dot"></span>${labels[c.estado]}</span></td>
+        <td>${fmtDate(c.creado_en)}</td>
+        <td><div class="actions-cell">
+          <button class="btn-icon" onclick="openEdit(${c.id})" title="Editar"><i class="ti ti-edit"></i></button>
+          <button class="btn-icon danger" onclick="del(${c.id})" title="Eliminar"><i class="ti ti-trash"></i></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function clearForm(){
+    ['f-nombre','f-telefono','f-correo'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-estado').value='prospecto';
+    document.getElementById('f-nombre').focus();
+  }
+
+  async function addClient(){
+    const nombre=document.getElementById('f-nombre').value.trim();
+    const telefono=document.getElementById('f-telefono').value.trim();
+    const correo=document.getElementById('f-correo').value.trim();
+    const estado=document.getElementById('f-estado').value;
+    if(!nombre||!telefono||!correo){showToast('Completa todos los campos','error');return;}
+    const res=await fetch('/api/clientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,telefono,correo,estado})});
+    const nuevo=await res.json();
+    clients.unshift(nuevo);
+    clearForm();
+    render();
+    setTimeout(()=>{const r=document.getElementById('row-'+nuevo.id);if(r)r.classList.add('highlight');},50);
+    showToast('"'+nombre+'" agregado correctamente');
+  }
+
+  async function del(id){
+    const c=clients.find(x=>x.id===id);
+    if(!confirm('¿Eliminar a '+c.nombre+'? Esta acción no se puede deshacer.'))return;
+    await fetch('/api/clientes/'+id,{method:'DELETE'});
+    clients=clients.filter(x=>x.id!==id);
+    render();
+    showToast('Cliente eliminado');
+  }
+
+  function openEdit(id){
+    editId=id;
+    const c=clients.find(x=>x.id===id);
+    document.getElementById('e-nombre').value=c.nombre;
+    document.getElementById('e-telefono').value=c.telefono;
+    document.getElementById('e-correo').value=c.correo;
+    document.getElementById('e-estado').value=c.estado;
+    document.getElementById('edit-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('e-nombre').focus(),50);
+  }
+  function closeEdit(){document.getElementById('edit-modal').classList.remove('open');}
+  function closeBg(e){if(e.target===document.getElementById('edit-modal'))closeEdit();}
+
+  async function saveEdit(){
+    const nombre=document.getElementById('e-nombre').value.trim();
+    const telefono=document.getElementById('e-telefono').value.trim();
+    const correo=document.getElementById('e-correo').value.trim();
+    const estado=document.getElementById('e-estado').value;
+    if(!nombre||!telefono||!correo)return;
+    const res=await fetch('/api/clientes/'+editId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,telefono,correo,estado})});
+    const updated=await res.json();
+    clients=clients.map(c=>c.id===editId?updated:c);
+    closeEdit();render();
+    setTimeout(()=>{const r=document.getElementById('row-'+editId);if(r)r.classList.add('highlight');},50);
+    showToast('Cliente actualizado');
+  }
+
+  function exportCSV(){
+    if(!clients.length){showToast('No hay clientes para exportar','error');return;}
+    const header='Nombre,Teléfono,Correo,Estado,Fecha registro';
+    const rows=clients.map(c=>`"${c.nombre}","${c.telefono}","${c.correo}","${c.estado}","${c.creado_en||''}"`);
+    const csv='﻿'+[header,...rows].join('\n');
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+    a.download='clientes_crm.csv';
+    a.click();
+    showToast('CSV exportado correctamente');
+  }
+
+  document.getElementById('f-nombre').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('f-telefono').focus();});
+  document.getElementById('f-telefono').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('f-correo').focus();});
+  document.getElementById('f-correo').addEventListener('keydown',e=>{if(e.key==='Enter')addClient();});
+  document.getElementById('e-nombre').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('e-telefono').focus();});
+  document.getElementById('e-telefono').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('e-correo').focus();});
+  document.getElementById('e-correo').addEventListener('keydown',e=>{if(e.key==='Enter')saveEdit();});
+
+  loadClients();
+</script>
+</body>
+</html>
