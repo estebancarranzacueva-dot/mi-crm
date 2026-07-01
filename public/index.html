@@ -141,6 +141,34 @@
 
     /* Loading */
     .loading { text-align: center; padding: 2rem; color: var(--text2); }
+
+    /* Views */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Integrations page */
+    .int-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+    .int-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; }
+    .int-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+    .int-logo { width: 40px; height: 40px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .int-logo.n8n { background: #fff0e6; color: #e05e00; border: 0.5px solid #ffd0b0; }
+    .int-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .int-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .int-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; margin-bottom: 1rem; }
+    .int-status.on { background: var(--green-bg); color: var(--green); }
+    .int-status.off { background: var(--gray-bg); color: var(--gray); }
+    .int-field { margin-bottom: 10px; }
+    .int-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+    .int-field input { width: 100%; }
+    .events-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .event-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 13px; color: var(--text2); user-select: none; }
+    .event-toggle.checked { border-color: #b0d0f0; background: var(--blue-bg); color: var(--blue); }
+    .event-toggle i { font-size: 15px; }
+    .test-log { background: #1a1a18; border-radius: var(--radius); padding: 12px 14px; font-family: monospace; font-size: 12px; color: #97C459; min-height: 80px; max-height: 160px; overflow-y: auto; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
+    .int-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; }
+    .log-entry { display: block; margin-bottom: 3px; }
+    .log-entry.err { color: #F09595; }
+    .log-entry.info { color: #85B7EB; }
   </style>
 </head>
 <body>
@@ -157,13 +185,14 @@
     </div>
     <div class="nav-section">
       <div class="nav-label">Principal</div>
-      <button class="nav-item active"><i class="ti ti-users"></i> Clientes</button>
+      <button class="nav-item active" id="nav-clientes" onclick="showView('clientes')"><i class="ti ti-users"></i> Clientes</button>
       <button class="nav-item" onclick="showToast('Próximamente','info')"><i class="ti ti-chart-bar"></i> Reportes</button>
       <button class="nav-item" onclick="showToast('Próximamente','info')"><i class="ti ti-calendar"></i> Seguimientos</button>
     </div>
     <div class="nav-section" style="margin-top:0.5rem">
-      <div class="nav-label">Exportar</div>
+      <div class="nav-label">Herramientas</div>
       <button class="nav-item" onclick="exportCSV()"><i class="ti ti-file-spreadsheet"></i> Exportar CSV</button>
+      <button class="nav-item" id="nav-integraciones" onclick="showView('integraciones')"><i class="ti ti-plug-connected"></i> Integraciones</button>
     </div>
     <div class="sidebar-footer">
       <div class="user-chip">
@@ -178,6 +207,92 @@
 
   <!-- Main -->
   <main class="main">
+
+    <!-- Vista: Integraciones -->
+    <div class="view" id="view-integraciones">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Integraciones</div>
+          <div class="page-sub">Conecta tu CRM con herramientas externas vía webhook</div>
+        </div>
+      </div>
+
+      <div class="int-grid">
+        <!-- Tarjeta n8n -->
+        <div class="int-card" style="grid-column: 1 / -1;">
+          <div class="int-card-head">
+            <div class="int-logo n8n"><i class="ti ti-webhook"></i></div>
+            <div>
+              <div class="int-name">n8n Webhook</div>
+              <div class="int-desc">Dispara flujos automáticos en n8n cuando ocurran eventos en tu CRM</div>
+            </div>
+            <span class="int-status off" id="n8n-status-badge"><span class="badge-dot"></span> Desconectado</span>
+          </div>
+
+          <div class="int-field">
+            <label>URL del Webhook</label>
+            <input type="text" id="n8n-url" placeholder="https://tu-n8n.com/webhook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Eventos que disparan el webhook</div>
+            <div class="events-grid">
+              <div class="event-toggle checked" id="ev-crear" onclick="toggleEvent('crear')">
+                <i class="ti ti-user-plus"></i> Cliente creado
+              </div>
+              <div class="event-toggle checked" id="ev-editar" onclick="toggleEvent('editar')">
+                <i class="ti ti-edit"></i> Cliente editado
+              </div>
+              <div class="event-toggle" id="ev-eliminar" onclick="toggleEvent('eliminar')">
+                <i class="ti ti-trash"></i> Cliente eliminado
+              </div>
+              <div class="event-toggle checked" id="ev-estado" onclick="toggleEvent('estado')">
+                <i class="ti ti-arrows-exchange"></i> Cambio de estado
+              </div>
+            </div>
+          </div>
+
+          <div class="int-field">
+            <label>Log de actividad</label>
+            <div class="test-log" id="webhook-log">Esperando actividad…</div>
+          </div>
+
+          <div class="int-footer">
+            <button class="btn" onclick="clearLog()"><i class="ti ti-eraser"></i> Limpiar log</button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn" onclick="testWebhook()"><i class="ti ti-send"></i> Enviar prueba</button>
+              <button class="btn btn-blue" onclick="saveWebhook()"><i class="ti ti-device-floppy"></i> Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Próximas integraciones -->
+        <div class="int-card" style="opacity:0.5;pointer-events:none;">
+          <div class="int-card-head">
+            <div class="int-logo" style="background:#e8f4fd;color:#0077b5;border:0.5px solid #b3d9f5;"><i class="ti ti-brand-whatsapp"></i></div>
+            <div>
+              <div class="int-name">WhatsApp</div>
+              <div class="int-desc">Envía mensajes automáticos a clientes</div>
+            </div>
+            <span class="int-status off"><span class="badge-dot"></span> Próximamente</span>
+          </div>
+        </div>
+
+        <div class="int-card" style="opacity:0.5;pointer-events:none;">
+          <div class="int-card-head">
+            <div class="int-logo" style="background:#fef3e2;color:#c7622a;border:0.5px solid #f9d5a7;"><i class="ti ti-mail"></i></div>
+            <div>
+              <div class="int-name">Email automático</div>
+              <div class="int-desc">Envía correos al agregar prospectos</div>
+            </div>
+            <span class="int-status off"><span class="badge-dot"></span> Próximamente</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Clientes -->
+    <div class="view active" id="view-clientes">
     <div class="page-header">
       <div>
         <div class="page-title">Clientes</div>
@@ -247,7 +362,7 @@
     </div>
 
     <!-- Table -->
-    <div class="table-wrap">
+    <div class="table-wrap" id="table-wrap">
       <table>
         <colgroup><col class="c-name"><col class="c-phone"><col class="c-email"><col class="c-status"><col class="c-date"><col class="c-actions"></colgroup>
         <thead>
@@ -263,6 +378,7 @@
         <tbody id="tbody"><tr><td colspan="6"><div class="loading"><i class="ti ti-loader-2"></i> Cargando clientes…</div></td></tr></tbody>
       </table>
     </div>
+    </div><!-- end view-clientes -->
   </main>
 </div>
 
@@ -393,12 +509,14 @@
     render();
     setTimeout(()=>{const r=document.getElementById('row-'+nuevo.id);if(r)r.classList.add('highlight');},50);
     showToast('"'+nombre+'" agregado correctamente');
+    fireWebhook('crear', nuevo);
   }
 
   async function del(id){
     const c=clients.find(x=>x.id===id);
     if(!confirm('¿Eliminar a '+c.nombre+'? Esta acción no se puede deshacer.'))return;
     await fetch('/api/clientes/'+id,{method:'DELETE'});
+    fireWebhook('eliminar', c);
     clients=clients.filter(x=>x.id!==id);
     render();
     showToast('Cliente eliminado');
@@ -425,10 +543,14 @@
     if(!nombre||!telefono||!correo)return;
     const res=await fetch('/api/clientes/'+editId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,telefono,correo,estado})});
     const updated=await res.json();
+    const anterior = clients.find(c=>c.id===editId);
+    const cambioEstado = anterior && anterior.estado !== estado;
     clients=clients.map(c=>c.id===editId?updated:c);
     closeEdit();render();
     setTimeout(()=>{const r=document.getElementById('row-'+editId);if(r)r.classList.add('highlight');},50);
     showToast('Cliente actualizado');
+    fireWebhook('editar', updated);
+    if(cambioEstado) fireWebhook('estado', {...updated, estado_anterior: anterior.estado});
   }
 
   function exportCSV(){
@@ -451,6 +573,125 @@
   document.getElementById('e-correo').addEventListener('keydown',e=>{if(e.key==='Enter')saveEdit();});
 
   loadClients();
+
+  // ── Navegación entre vistas ──────────────────────────────────
+  function showView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+  }
+
+  // ── Webhook / n8n ────────────────────────────────────────────
+  const WH_KEY = 'crm_webhook_url';
+  const WH_EVENTS_KEY = 'crm_webhook_events';
+  let webhookEvents = { crear: true, editar: true, eliminar: false, estado: true };
+
+  function loadWebhookConfig() {
+    const url = localStorage.getItem(WH_KEY) || '';
+    document.getElementById('n8n-url').value = url;
+    const saved = localStorage.getItem(WH_EVENTS_KEY);
+    if (saved) webhookEvents = JSON.parse(saved);
+    ['crear','editar','eliminar','estado'].forEach(ev => {
+      const el = document.getElementById('ev-' + ev);
+      el.classList.toggle('checked', !!webhookEvents[ev]);
+    });
+    updateWebhookBadge(url);
+  }
+
+  function updateWebhookBadge(url) {
+    const badge = document.getElementById('n8n-status-badge');
+    if (url) {
+      badge.className = 'int-status on';
+      badge.innerHTML = '<span class="badge-dot"></span> Conectado';
+    } else {
+      badge.className = 'int-status off';
+      badge.innerHTML = '<span class="badge-dot"></span> Desconectado';
+    }
+  }
+
+  function toggleEvent(ev) {
+    webhookEvents[ev] = !webhookEvents[ev];
+    document.getElementById('ev-' + ev).classList.toggle('checked', webhookEvents[ev]);
+  }
+
+  function saveWebhook() {
+    const url = document.getElementById('n8n-url').value.trim();
+    localStorage.setItem(WH_KEY, url);
+    localStorage.setItem(WH_EVENTS_KEY, JSON.stringify(webhookEvents));
+    updateWebhookBadge(url);
+    showToast(url ? 'Webhook guardado' : 'Webhook eliminado');
+    logWebhook('info', 'Configuración guardada' + (url ? ': ' + url : ' (sin URL)'));
+  }
+
+  function logWebhook(type, msg) {
+    const log = document.getElementById('webhook-log');
+    const now = new Date().toLocaleTimeString('es-MX', { hour12: false });
+    const icons = { success: '✓', error: '✗', info: '→' };
+    const entry = document.createElement('span');
+    entry.className = 'log-entry ' + (type === 'success' ? '' : type);
+    entry.textContent = '[' + now + '] ' + (icons[type] || '') + ' ' + msg + '\n';
+    if (log.textContent === 'Esperando actividad…') log.textContent = '';
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function clearLog() {
+    const log = document.getElementById('webhook-log');
+    log.textContent = 'Esperando actividad…';
+  }
+
+  async function fireWebhook(evento, cliente) {
+    const url = localStorage.getItem(WH_KEY);
+    const events = JSON.parse(localStorage.getItem(WH_EVENTS_KEY) || '{}');
+    if (!url || !events[evento]) return;
+    const payload = { evento, timestamp: new Date().toISOString(), cliente };
+    logWebhook('info', 'Enviando [' + evento + '] → ' + url);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logWebhook('success', 'Respuesta OK (' + res.status + ') para [' + evento + ']');
+      } else {
+        logWebhook('err', 'Error HTTP ' + res.status + ' en [' + evento + ']');
+      }
+    } catch (e) {
+      logWebhook('err', 'Sin respuesta: ' + e.message);
+    }
+  }
+
+  async function testWebhook() {
+    const url = document.getElementById('n8n-url').value.trim();
+    if (!url) { showToast('Ingresa una URL primero', 'error'); return; }
+    const payload = {
+      evento: 'prueba',
+      timestamp: new Date().toISOString(),
+      cliente: { id: 0, nombre: 'Cliente de Prueba', telefono: '+52 55 0000 0000', correo: 'prueba@micrm.com', estado: 'prospecto' }
+    };
+    logWebhook('info', 'Enviando prueba → ' + url);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logWebhook('success', 'Prueba exitosa (' + res.status + ') — n8n recibió el payload');
+        showToast('Prueba enviada correctamente');
+      } else {
+        logWebhook('err', 'Error ' + res.status + ' — revisa la URL del webhook');
+        showToast('Error al enviar la prueba', 'error');
+      }
+    } catch (e) {
+      logWebhook('err', 'No se pudo conectar: ' + e.message);
+      showToast('No se pudo conectar con n8n', 'error');
+    }
+  }
+
+  loadWebhookConfig();
 </script>
 </body>
 </html>
