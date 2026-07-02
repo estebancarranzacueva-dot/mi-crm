@@ -719,6 +719,15 @@ Saludos.</textarea>
     renderChart(mode);
   }
 
+  function localDateStr(isoStr) {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
   function renderChart(mode) {
     const ctx = document.getElementById('main-chart').getContext('2d');
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
@@ -731,16 +740,16 @@ Saludos.</textarea>
       sub = 'Número de clientes registrados cada día';
       for (let i = 13; i >= 0; i--) {
         const d = new Date(now); d.setDate(d.getDate()-i);
-        const key = d.toISOString().slice(0,10);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         labels.push(d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}));
-        values.push(clients.filter(c => c.created_at?.slice(0,10) === key).length);
+        values.push(clients.filter(c => localDateStr(c.created_at) === key).length);
       }
     } else if (mode === 'weekly') {
       title = 'Clientes por semana — últimas 8 semanas';
       sub = 'Total de clientes registrados cada semana';
       for (let i = 7; i >= 0; i--) {
-        const wStart = new Date(now); wStart.setDate(wStart.getDate() - (i*7+6));
-        const wEnd = new Date(now); wEnd.setDate(wEnd.getDate() - (i*7));
+        const wEnd = new Date(now); wEnd.setDate(wEnd.getDate() - i*7);
+        const wStart = new Date(wEnd); wStart.setDate(wStart.getDate()-6);
         wStart.setHours(0,0,0,0); wEnd.setHours(23,59,59,999);
         labels.push('Sem ' + wEnd.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}));
         values.push(clients.filter(c => { const d=new Date(c.created_at); return d>=wStart&&d<=wEnd; }).length);
