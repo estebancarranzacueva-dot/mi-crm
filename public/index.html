@@ -463,7 +463,7 @@
             <th onclick="sort('telefono')">Teléfono <i class="ti ti-selector" id="sort-telefono"></i></th>
             <th onclick="sort('correo')">Correo <i class="ti ti-selector" id="sort-correo"></i></th>
             <th onclick="sort('estado')">Estado <i class="ti ti-selector" id="sort-estado"></i></th>
-            <th onclick="sort('creado_en')">Fecha <i class="ti ti-selector" id="sort-creado_en"></i></th>
+            <th onclick="sort('created_at')">Fecha <i class="ti ti-selector" id="sort-created_at"></i></th>
             <th></th>
           </tr>
         </thead>
@@ -553,7 +553,7 @@ Saludos.</textarea>
 
   function sort(k){
     if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=true;}
-    ['nombre','telefono','correo','estado','creado_en'].forEach(x=>{
+    ['nombre','telefono','correo','estado','created_at'].forEach(x=>{
       const el=document.getElementById('sort-'+x);
       if(el)el.className='ti '+(x===k?(sortAsc?'ti-chevron-up':'ti-chevron-down'):'ti-selector');
     });
@@ -598,7 +598,7 @@ Saludos.</textarea>
         <td>${c.telefono}</td>
         <td title="${c.correo}">${c.correo}</td>
         <td><span class="badge ${c.estado}"><span class="badge-dot"></span>${labels[c.estado]}</span></td>
-        <td>${fmtDate(c.creado_en)}</td>
+        <td>${fmtDate(c.created_at)}</td>
         <td><div class="actions-cell">
           <button class="btn-icon" onclick="openEdit(${c.id})" title="Editar"><i class="ti ti-edit"></i></button>
           <button class="btn-icon danger" onclick="del(${c.id})" title="Eliminar"><i class="ti ti-trash"></i></button>
@@ -673,7 +673,7 @@ Saludos.</textarea>
   function exportCSV(){
     if(!clients.length){showToast('No hay clientes para exportar','error');return;}
     const header='Nombre,Teléfono,Correo,Estado,Fecha registro';
-    const rows=clients.map(c=>`"${c.nombre}","${c.telefono}","${c.correo}","${c.estado}","${c.creado_en||''}"`);
+    const rows=clients.map(c=>`"${c.nombre}","${c.telefono}","${c.correo}","${c.estado}","${c.created_at||''}"`);
     const csv='﻿'+[header,...rows].join('\n');
     const a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
@@ -701,9 +701,9 @@ Saludos.</textarea>
     const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-6);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const hoy = clients.filter(c => c.creado_en?.slice(0,10) === todayStr).length;
-    const semana = clients.filter(c => new Date(c.creado_en) >= weekAgo).length;
-    const mes = clients.filter(c => new Date(c.creado_en) >= monthStart).length;
+    const hoy = clients.filter(c => c.created_at?.slice(0,10) === todayStr).length;
+    const semana = clients.filter(c => new Date(c.created_at) >= weekAgo).length;
+    const mes = clients.filter(c => new Date(c.created_at) >= monthStart).length;
 
     document.getElementById('r-hoy').textContent = hoy;
     document.getElementById('r-semana').textContent = semana;
@@ -733,7 +733,7 @@ Saludos.</textarea>
         const d = new Date(now); d.setDate(d.getDate()-i);
         const key = d.toISOString().slice(0,10);
         labels.push(d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}));
-        values.push(clients.filter(c => c.creado_en?.slice(0,10) === key).length);
+        values.push(clients.filter(c => c.created_at?.slice(0,10) === key).length);
       }
     } else if (mode === 'weekly') {
       title = 'Clientes por semana — últimas 8 semanas';
@@ -743,7 +743,7 @@ Saludos.</textarea>
         const wEnd = new Date(now); wEnd.setDate(wEnd.getDate() - (i*7));
         wStart.setHours(0,0,0,0); wEnd.setHours(23,59,59,999);
         labels.push('Sem ' + wEnd.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}));
-        values.push(clients.filter(c => { const d=new Date(c.creado_en); return d>=wStart&&d<=wEnd; }).length);
+        values.push(clients.filter(c => { const d=new Date(c.created_at); return d>=wStart&&d<=wEnd; }).length);
       }
     } else {
       title = 'Clientes por mes — últimos 6 meses';
@@ -753,7 +753,7 @@ Saludos.</textarea>
         labels.push(d.toLocaleDateString('es-MX',{month:'long',year:'numeric'}));
         const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
         const mEnd = new Date(d.getFullYear(), d.getMonth()+1, 0, 23,59,59);
-        values.push(clients.filter(c => { const cd=new Date(c.creado_en); return cd>=mStart&&cd<=mEnd; }).length);
+        values.push(clients.filter(c => { const cd=new Date(c.created_at); return cd>=mStart&&cd<=mEnd; }).length);
       }
     }
 
