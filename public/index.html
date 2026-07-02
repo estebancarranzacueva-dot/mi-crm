@@ -317,8 +317,13 @@
           </div>
 
           <div class="int-field">
-            <label>URL del Webhook</label>
+            <label>Webhook principal (Telegram / notificaciones)</label>
             <input type="text" id="n8n-url" placeholder="https://tu-n8n.com/webhook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+
+          <div class="int-field">
+            <label>Webhook de correo (Gmail + Outlook para inactivos)</label>
+            <input type="text" id="n8n-url-correo" placeholder="https://tu-n8n.com/webhook/crm-correo-inactivo">
           </div>
 
           <div style="margin-bottom:10px">
@@ -855,8 +860,8 @@ Saludos.</textarea>
     if (!emailTargetClient) return;
     const asunto = document.getElementById('em-asunto').value.trim();
     const mensaje = document.getElementById('em-mensaje').value.trim();
-    const url = document.getElementById('n8n-url')?.value?.trim();
-    if (!url) { showToast('Configura el webhook de n8n primero', 'error'); return; }
+    const url = document.getElementById('n8n-url-correo')?.value?.trim();
+    if (!url) { showToast('Configura el webhook de correo en Integraciones', 'error'); return; }
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -870,8 +875,8 @@ Saludos.</textarea>
   async function emailAllInactivos() {
     const inactivos = clients.filter(c => c.estado === 'inactivo');
     if (!inactivos.length) return;
-    const url = document.getElementById('n8n-url')?.value?.trim();
-    if (!url) { showToast('Configura el webhook de n8n primero', 'error'); return; }
+    const url = document.getElementById('n8n-url-correo')?.value?.trim();
+    if (!url) { showToast('Configura el webhook de correo en Integraciones', 'error'); return; }
     if (!confirm('¿Enviar correo a los ' + inactivos.length + ' clientes inactivos?')) return;
     const asunto = 'Te echamos de menos — vuelve pronto';
     let ok = 0;
@@ -907,6 +912,7 @@ Saludos.</textarea>
       const url = cfg.webhook_url || '';
       if (cfg.webhook_events) webhookEvents = JSON.parse(cfg.webhook_events);
       document.getElementById('n8n-url').value = url;
+      document.getElementById('n8n-url-correo').value = cfg.webhook_url_correo || '';
       ['crear','editar','eliminar','estado'].forEach(ev => {
         document.getElementById('ev-' + ev).classList.toggle('checked', !!webhookEvents[ev]);
       });
@@ -934,12 +940,14 @@ Saludos.</textarea>
 
   async function saveWebhook() {
     const url = document.getElementById('n8n-url').value.trim();
+    const urlCorreo = document.getElementById('n8n-url-correo').value.trim();
     try {
       await fetch('/api/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           webhook_url: url,
+          webhook_url_correo: urlCorreo,
           webhook_events: JSON.stringify(webhookEvents)
         })
       });
