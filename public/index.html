@@ -584,20 +584,22 @@
   }
 
   // ── Webhook / n8n ────────────────────────────────────────────
-  const WH_KEY = 'crm_webhook_url';
-  const WH_EVENTS_KEY = 'crm_webhook_events';
   let webhookEvents = { crear: true, editar: true, eliminar: false, estado: true };
 
-  function loadWebhookConfig() {
-    const url = localStorage.getItem(WH_KEY) || '';
-    document.getElementById('n8n-url').value = url;
-    const saved = localStorage.getItem(WH_EVENTS_KEY);
-    if (saved) webhookEvents = JSON.parse(saved);
-    ['crear','editar','eliminar','estado'].forEach(ev => {
-      const el = document.getElementById('ev-' + ev);
-      el.classList.toggle('checked', !!webhookEvents[ev]);
-    });
-    updateWebhookBadge(url);
+  async function loadWebhookConfig() {
+    try {
+      const res = await fetch('/api/config');
+      const cfg = await res.json();
+      const url = cfg.webhook_url || '';
+      if (cfg.webhook_events) webhookEvents = JSON.parse(cfg.webhook_events);
+      document.getElementById('n8n-url').value = url;
+      ['crear','editar','eliminar','estado'].forEach(ev => {
+        document.getElementById('ev-' + ev).classList.toggle('checked', !!webhookEvents[ev]);
+      });
+      updateWebhookBadge(url);
+    } catch(e) {
+      console.warn('Config no disponible:', e.message);
+    }
   }
 
   function updateWebhookBadge(url) {
@@ -616,13 +618,23 @@
     document.getElementById('ev-' + ev).classList.toggle('checked', webhookEvents[ev]);
   }
 
-  function saveWebhook() {
+  async function saveWebhook() {
     const url = document.getElementById('n8n-url').value.trim();
-    localStorage.setItem(WH_KEY, url);
-    localStorage.setItem(WH_EVENTS_KEY, JSON.stringify(webhookEvents));
-    updateWebhookBadge(url);
-    showToast(url ? 'Webhook guardado' : 'Webhook eliminado');
-    logWebhook('info', 'Configuración guardada' + (url ? ': ' + url : ' (sin URL)'));
+    try {
+      await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          webhook_url: url,
+          webhook_events: JSON.stringify(webhookEvents)
+        })
+      });
+      updateWebhookBadge(url);
+      showToast(url ? 'Webhook guardado' : 'Webhook eliminado');
+      logWebhook('info', 'Configuración guardada en la nube' + (url ? ': ' + url : ' (sin URL)'));
+    } catch(e) {
+      showToast('Error al guardar', 'error');
+    }
   }
 
   function logWebhook(type, msg) {
@@ -643,8 +655,8 @@
   }
 
   async function fireWebhook(evento, cliente) {
-    const url = localStorage.getItem(WH_KEY);
-    const events = JSON.parse(localStorage.getItem(WH_EVENTS_KEY) || '{}');
+    const url = document.getElementById('n8n-url')?.value?.trim();
+    const events = webhookEvents;
     if (!url || !events[evento]) return;
     const payload = { evento, timestamp: new Date().toISOString(), cliente };
     logWebhook('info', 'Enviando [' + evento + '] → ' + url);
