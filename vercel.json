@@ -8,6 +8,7 @@
     { "src": "/api/clientes/([^/]+)", "dest": "/api/clientes/[id].js" },
     { "src": "/api/clientes", "dest": "/api/clientes.js" },
     { "src": "/api/config", "dest": "/api/config.js" },
+    { "src": "/api/auth-config", "dest": "/api/auth-config.js" },
     { "src": "/(.*)", "dest": "/public/index.html" }
   ]
 }
